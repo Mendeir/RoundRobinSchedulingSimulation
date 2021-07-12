@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class GUI extends JFrame implements ActionListener {
 
@@ -31,6 +32,10 @@ public class GUI extends JFrame implements ActionListener {
     int i;
     int j;
 
+    // ArrayList Declaration
+    ArrayList <Integer> displayChartValues;
+    ArrayList <ArrayList<String>> displayProcessValues;
+
     //Instantiation of gui objects
     JFrame frame = new JFrame("Round Robin Scheduling Simulation");
     JPanel panelOne = new JPanel();
@@ -43,6 +48,8 @@ public class GUI extends JFrame implements ActionListener {
     JComboBox selectionQueue = new JComboBox(queue);
     JTable table;
     JLabel[] label;
+    JLabel labelProcessValues;
+    JLabel labelChartValues;
     JTextField quantumTime = new JTextField();
     JTextField[] input;
     GridBagConstraints gbc =  new GridBagConstraints();
@@ -136,6 +143,9 @@ public class GUI extends JFrame implements ActionListener {
             turnTimeStorage = algoProcess.getTurnAroundTimeCollection();
             avgWaitTime = algoProcess.getAverageWaitingTime();
             avgTurnTime = algoProcess.getAverageTurnAroundTime();
+            displayChartValues = algoProcess.getChartValues();
+            displayProcessValues = algoProcess.getProcessValues();
+            //finalResultTable();
             displayQueue();
         }
 
@@ -205,20 +215,28 @@ public class GUI extends JFrame implements ActionListener {
     public void displayQueue(){
         frame.setBounds(200, 100, 1000, 690);
         panelOne.setBounds(0, 50, 985, 200);
-
+        panelOne.setLayout(null);
         panelOne.removeAll();
         panelOne.revalidate();
         frame.repaint();
 
-        for (int i = 0; i < queueSize; i++) {
-            labelIndex = new JLabel(String.valueOf(i),JLabel.CENTER);
-            labelValues = new JLabel(String.valueOf(values.get(i)),JLabel.CENTER);
-            labelValues.setBounds(i*50,120,50,50);
-            labelIndex.setBounds(i*50,70,50,50);
-            labelValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            panelOne.add(labelValues);
-            panelOne.add(labelIndex);
+        for (int i = 1; i <= queueSize; i++) {
+
+            labelProcessValues = new JLabel("P" + String.valueOf(i),JLabel.CENTER);
+            labelProcessValues.setBounds(i*100,50,100,50);
+            labelProcessValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            panelOne.add(labelProcessValues);
+
         }
+        for (int i = 0; i < displayChartValues.size(); i++) {
+
+            labelChartValues = new JLabel(" ",JLabel.CENTER);
+            labelChartValues.setBounds(i*50,120,50,50);
+            labelChartValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            panelOne.add(labelChartValues);
+
+        }
+
 
     }
 
