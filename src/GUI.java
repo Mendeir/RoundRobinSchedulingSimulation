@@ -6,7 +6,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.DecimalFormat;
+import java.util.ArrayList;
+import javax.swing.JTable;
 
 public class GUI extends JFrame implements ActionListener {
 
@@ -24,6 +25,11 @@ public class GUI extends JFrame implements ActionListener {
     double avgWaitTime = 0;
     double avgTurnTime = 0;
 
+    //Process iterator
+    int navigationCounter = -1;
+    int processCounter = 0;
+    int listCounter = 0;
+
     //used for array instantiation
     int queueSize = 0;
 
@@ -31,9 +37,14 @@ public class GUI extends JFrame implements ActionListener {
     int i;
     int j;
 
+    // ArrayList Declaration
+    ArrayList <Integer> displayChartValues;
+    ArrayList <ArrayList<String>> displayProcessValues;
+
     //Instantiation of gui objects
     JFrame frame = new JFrame("Round Robin Scheduling Simulation");
     JPanel panelOne = new JPanel();
+    JPanel panelTwo = new JPanel();
     JPanel panelResult = new JPanel();
     JPanel dropDownPanel = new JPanel();
     JButton enterButton = new JButton("Enter");
@@ -43,6 +54,8 @@ public class GUI extends JFrame implements ActionListener {
     JComboBox selectionQueue = new JComboBox(queue);
     JTable table;
     JLabel[] label;
+    JLabel labelProcessValues;
+    JLabel labelChartValues;
     JTextField quantumTime = new JTextField();
     JTextField[] input;
     GridBagConstraints gbc =  new GridBagConstraints();
@@ -51,7 +64,6 @@ public class GUI extends JFrame implements ActionListener {
     // formatting panel layout
     TitledBorder title;
     Border blackLine = BorderFactory.createLineBorder(Color.BLACK);
-    DecimalFormat df = new DecimalFormat("###.####");
 
     GUI(){
         //format for display output
@@ -69,9 +81,6 @@ public class GUI extends JFrame implements ActionListener {
         title = BorderFactory.createTitledBorder(blackLine, "Please Input Numbers");
         title.setTitleJustification(TitledBorder.CENTER);
         panelOne.setBorder(title);
-
-        panelResult.setBounds(0, 50, 485, 400);
-        panelResult.setLayout(new BorderLayout());
 
         // Button sizes and formats
         dropDownPanel.add(leftButton);
@@ -91,9 +100,11 @@ public class GUI extends JFrame implements ActionListener {
         dropDownPanel.add(selectionQueue);
 
         // Adds and visibility of the frame
+        frame.add(panelTwo);
         frame.add(panelOne);
         frame.add(panelResult);
         frame.add(dropDownPanel);
+        frame.setLayout(null);
         frame.setVisible(true);
     }
 
@@ -136,16 +147,43 @@ public class GUI extends JFrame implements ActionListener {
             turnTimeStorage = algoProcess.getTurnAroundTimeCollection();
             avgWaitTime = algoProcess.getAverageWaitingTime();
             avgTurnTime = algoProcess.getAverageTurnAroundTime();
-            displayQueue();
+            displayChartValues = algoProcess.getChartValues();
+            displayProcessValues = algoProcess.getProcessValues();
         }
 
         if (e.getSource() ==  rightButton){
-
+            if (navigationCounter != 1 + displayProcessValues.size())
+            navigationCounter++;
+            if (navigationCounter == 0){
+                displayQueue();
+                processCounter = 0;
+            }else if (navigationCounter != 1 + displayProcessValues.size()){
+                nextQueue();
+                processCounter++;
+            }else{
+                finalResultTable();
+            }
         }
 
         if (e.getSource() == leftButton){
+            if (navigationCounter != 0 )
+                navigationCounter--;
 
+            if (navigationCounter == 0){
+                panelTwo.setBorder(new EmptyBorder(0,0,0,0));
+                panelTwo.removeAll();
+                displayQueue();
+                processCounter = 0;
+            }else if (navigationCounter != 1 + displayProcessValues.size()){
+                panelTwo.removeAll();
+                --processCounter;
+                nextQueue();
+            }else{
+                processCounter = 1+displayProcessValues.size();
+                finalResultTable();
+            }
         }
+
     }
 
     public void queueGenerator(int queueSize){
@@ -182,11 +220,23 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void finalResultTable(){
-        frame.setBounds(400, 100, 500, 490);
-        panelOne.setBorder(new EmptyBorder(0,0,0,0));
+        panelOne.removeAll();
+
+        labelProcessValues = new JLabel("Quantum Time: " + quantumInput);
+        labelProcessValues.setBounds(50,100,400,50);
+        labelProcessValues.setFont(new Font("Arial",Font.BOLD,15));
+        panelOne.add(labelProcessValues);
+
+        panelTwo.setBorder(new EmptyBorder(0,0,0,0));
+        frame.setBounds(400, 0, 600, 700);
+        panelResult.setBounds(0, 350, 585, 400);
+        data.setRowCount(0);
+        data.setColumnCount(0);
         table = new JTable(data);
         table.setFont(new Font("Arial", Font.PLAIN, 20));
         table.setRowHeight(30);
+        table.setRequestFocusEnabled(true);
+        table.setPreferredScrollableViewportSize(new Dimension(485,300));
 
         data.addColumn("Process");
         data.addColumn("Burst Time");
@@ -198,28 +248,102 @@ public class GUI extends JFrame implements ActionListener {
         }
         data.addRow(new Object[]{"Average", null, avgWaitTime, avgTurnTime});
 
-
-        panelResult.add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panelResult.add(scrollPane);
     }
 
     public void displayQueue(){
-        frame.setBounds(200, 100, 1000, 690);
-        panelOne.setBounds(0, 50, 985, 200);
-
         panelOne.removeAll();
         panelOne.revalidate();
         frame.repaint();
 
-        for (int i = 0; i < queueSize; i++) {
-            labelIndex = new JLabel(String.valueOf(i),JLabel.CENTER);
-            labelValues = new JLabel(String.valueOf(values.get(i)),JLabel.CENTER);
-            labelValues.setBounds(i*50,120,50,50);
-            labelIndex.setBounds(i*50,70,50,50);
-            labelValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            panelOne.add(labelValues);
-            panelOne.add(labelIndex);
+        frame.setBounds(200, 100, 1000, 390);
+        panelOne.setBounds(0, 50, 985, 150);
+        panelTwo.setBounds(0,200,985,150);
+        panelOne.setBorder(new EmptyBorder(0, 0, 0, 0));
+        panelOne.setLayout(null);
+        panelTwo.setLayout(null);
+
+        for (i = 1; i <= queueSize; i++) {
+
+            labelProcessValues = new JLabel( "P" + String.valueOf(i),JLabel.CENTER);
+            labelProcessValues.setBounds(i*100,50,100,50);
+            labelProcessValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            panelOne.add(labelProcessValues);
+
         }
 
+        labelProcessValues = new JLabel("Quantum Time: " + quantumInput);
+        labelProcessValues.setBounds(50,100,400,50);
+        labelProcessValues.setFont(new Font("Arial",Font.PLAIN,15));
+        panelOne.add(labelProcessValues);
+
+        for (i = 0; i < displayChartValues.size()-1; i++) {
+
+            labelChartValues = new JLabel(" ",JLabel.CENTER);
+            labelChartValues.setBounds(i*50,25,50,50);
+            labelChartValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            panelTwo.add(labelChartValues);
+
+        }
+        for (i = 0; i < displayChartValues.size(); i++){
+            labelChartValues = new JLabel(String.valueOf(displayChartValues.get(i)));
+            labelChartValues.setBounds(i*48,70,50,50);
+            panelTwo.add(labelChartValues);
+        }
+    }
+
+    public void nextQueue() {
+        panelOne.removeAll();
+        panelOne.revalidate();
+        panelTwo.revalidate();
+        frame.repaint();
+
+        frame.setBounds(200, 100, 1000, 390);
+        panelOne.setBounds(0, 50, 985, 150);
+        panelTwo.setBounds(0,200,985,150);
+        panelOne.setBorder(new EmptyBorder(0, 0, 0, 0));
+        panelOne.setLayout(null);
+        panelTwo.setLayout(null);
+
+        if(processCounter == 0) {
+            listCounter = 0;
+        }else if(processCounter == 1) {
+            listCounter = displayProcessValues.get(0).size();
+        }
+
+        for (i =0; i < displayProcessValues.get(processCounter).size(); i++) {
+            listCounter++;
+            labelProcessValues = new JLabel(String.valueOf(displayProcessValues.get(processCounter).get(i)), JLabel.CENTER);
+            labelProcessValues.setBounds((i+1) * 100, 50, 100, 50);
+            labelProcessValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            panelOne.add(labelProcessValues);
+
+            labelChartValues = new JLabel(String.valueOf(displayProcessValues.get(processCounter).get(i)),JLabel.CENTER);
+            labelChartValues.setBounds((listCounter-1)*50,25,50,50);
+            labelChartValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            panelTwo.add(labelChartValues);
+    }
+
+        labelProcessValues = new JLabel("Quantum Time: " + quantumInput);
+        labelProcessValues.setBounds(50,100,400,50);
+        labelProcessValues.setFont(new Font("Arial",Font.PLAIN,15));
+        panelOne.add(labelProcessValues);
+
+        for (i = 0; i < displayChartValues.size()-1; i++) {
+
+            labelChartValues = new JLabel(" ",JLabel.CENTER);
+            labelChartValues.setBounds(i*50,25,50,50);
+            labelChartValues.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            panelTwo.add(labelChartValues);
+
+
+        }
+        for (i = 0; i < displayChartValues.size(); i++){
+            labelChartValues = new JLabel(String.valueOf(displayChartValues.get(i)));
+            labelChartValues.setBounds(i*48,70,50,50);
+            panelTwo.add(labelChartValues);
+        }
     }
 
 }
